@@ -1,0 +1,61 @@
+BootStrap: docker
+From: scilus/singularity-base-tractoflow
+
+%environment
+    export MATPLOTLIBRC="/usr/local/lib/python3.7/dist-packages/matplotlib/mpl-data/"
+
+%setup
+    mkdir $SINGULARITY_ROOTFS/pybin $SINGULARITY_ROOTFS/CODE/
+    cp ../code/* $SINGULARITY_ROOTFS/CODE/
+    cp mni_icbm152_nlin_asym_09c_t1_masked_2mm.nii.gz $SINGULARITY_ROOTFS/
+
+    git clone https://github.com/scilus/tractometry_flow.git $SINGULARITY_ROOTFS/tractometry_flow/
+    cd $SINGULARITY_ROOTFS/tractometry_flow/
+    git checkout f21c853
+    sed -i 's/scratch = true/scratch = false/g' $SINGULARITY_ROOTFS/tractometry_flow/nextflow.config
+    sed -i 's/echo '"'"'$json_str'"'"'/echo $json_str/g' $SINGULARITY_ROOTFS/tractometry_flow/main.nf
+    
+%post
+    apt-get update
+    apt-get -y install locales
+    export LC_CTYPE="en_US.UTF-8"
+    export LC_ALL="en_US.UTF-8"
+    export LANG="en_US.UTF-8"
+    export LANGUAGE=en_US.UTF-8
+    locale-gen "en_US.UTF-8"
+    dpkg-reconfigure locales
+    
+    apt update
+    apt -y install software-properties-common
+    add-apt-repository -y ppa:deadsnakes/ppa
+    apt update
+    apt-get -y install openjdk-8-jdk
+    apt-get -y install curl unzip parallel
+    apt-get -y install python3.7-dev
+    apt-get -y install python3.7-tk
+    apt-get -y install libblas3 liblapack3
+    apt-get -y install liblapack-dev libblas-dev gfortran
+    apt-get -y install libxt-dev libgomp1 binutils perl psmisc unzip uuid-dev vim-common libjpeg62-dev
+    apt-get -y purge nvidia*
+	apt-get -y install xserver-xorg-video-intel libgl1-mesa-glx libglu1-mesa libgl1-mesa-dev libgl1-mesa-dri xserver-xorg-core   
+	dpkg-reconfigure xserver-xorg   
+	apt-get -y install xvfb imagemagick
+
+    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+    python3.7 get-pip.py
+    pip install fpdf
+    pip install numpy==1.18.* --no-binary numpy
+    pip install -e git://github.com/frheault/scilpy.git@56601b9#egg=scilpy
+    sed -i '41s/.*/backend : Agg/' /usr/local/lib/python3.7/dist-packages/matplotlib/mpl-data/matplotlibrc
+
+    wget https://github.com/nextflow-io/nextflow/releases/download/v19.04.0/nextflow-19.04.0-all
+    mv nextflow-19.04.0-all nextflow
+    chmod +x nextflow
+
+    # Make custom folders
+    mkdir -p /INPUTS && chmod 755 /INPUTS 
+    mkdir -p /OUTPUTS && chmod 775 /OUTPUTS
+    mkdir -p /TMP && chmod 775 /TMP
+	
+%runscript
+    xvfb-run -a --server-num=$((65536+$$)) --server-args="-screen 0 1600x1280x24 -ac" bash /CODE/launch_tractometry_flow_wrapper.sh /INPUTS /OUTPUTS "$@"

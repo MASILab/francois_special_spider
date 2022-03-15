@@ -1,0 +1,211 @@
+---
+moreauto: true
+procversion: 1.0.0
+procname: tractoflow
+
+inputs:
+  default:
+    container_path: tractoflow_v1.0.0.simg
+    sh_order: 8
+    dti_shells: \"0 1000\"
+    fodf_shells: \"0 1000\"
+    pft_seed: 5
+    pft_mask_type: wm
+    local_seed: 5
+    local_mask_type: wm
+    algo: prob
+  xnat:
+    scans:
+      - name: scan_t1
+        types: T1,MJD_3DT1,AnatBrain_T1W3D,AnatBrain_T1W3D_CS3
+        resources:
+          - resource: NIFTI
+            ftype: FILE
+            varname: t1_file
+            fdest: t1.nii.gz
+            fmatch: '*.nii.gz'
+    assessors:
+      - name: assr_dtiqa
+        proctypes: dtiQA_synb0_v7
+        needs_qc: False
+        resources:
+          - resource: PREPROCESSED
+            fmatch: 'dwmri.nii.gz'
+            fcount: 1
+            fdest: dwmri.nii.gz
+            ftype: FILE
+            varname: dti_nifti
+          - resource: PREPROCESSED
+            fmatch: 'dwmri.bvec'
+            fcount: 1
+            fdest: dwmri.bvec
+            ftype: FILE
+            varname: dti_bvec
+          - resource: PREPROCESSED
+            fmatch: 'dwmri.bval'
+            fcount: 1
+            fdest: dwmri.bval
+            ftype: FILE
+            varname: dti_bval
+    attrs:
+      - varname: project
+        object: session
+        attr: project
+      - varname: subject
+        object: session
+        attr: subject_label
+      - varname: session
+        object: session
+        attr: label
+outputs:
+  - path: 'report.pdf'
+    type: FILE
+    resource: PDF
+  - path: 'report.html'
+    type: FILE
+    resource: REPORT
+  - path: 'readme.txt'
+    type: FILE
+    resource: REPORT
+  - path: '*__b0_mask_resampled.nii.gz'
+    type: FILE
+    resource: DWI_FILES
+  - path: '*__b0_resampled.nii.gz'
+    type: FILE
+    resource: DWI_FILES
+  - path: '*__dwi_resampled.nii.gz'
+    type: FILE
+    resource: DWI_FILES
+  - path: '*__dwi.bval'
+    type: FILE
+    resource: DWI_FILES
+  - path: '*__dwi.bvec'
+    type: FILE
+    resource: DWI_FILES
+  - path: '*__output0GenericAffine.mat'
+    type: FILE
+    resource: REG_TRANSFORMS
+  - path: '*__output1InverseWarp.nii.gz'
+    type: FILE
+    resource: REG_TRANSFORMS
+  - path: '*__output1Warp.nii.gz'
+    type: FILE
+    resource: REG_TRANSFORMS
+  - path: '*__t1_mask_warped.nii.gz'
+    type: FILE
+    resource: REG_IMAGES
+  - path: '*__t1_warped.nii.gz'
+    type: FILE
+    resource: REG_IMAGES
+  - path: '*__map_csf.nii.gz'
+    type: FILE
+    resource: TISSUES_SEGMENTATION
+  - path: '*__map_gm.nii.gz'
+    type: FILE
+    resource: TISSUES_SEGMENTATION
+  - path: '*__map_wm.nii.gz'
+    type: FILE
+    resource: TISSUES_SEGMENTATION
+  - path: '*__mask_csf.nii.gz'
+    type: FILE
+    resource: TISSUES_SEGMENTATION
+  - path: '*__mask_gm.nii.gz'
+    type: FILE
+    resource: TISSUES_SEGMENTATION
+  - path: '*__mask_wm.nii.gz'
+    type: FILE
+    resource: TISSUES_SEGMENTATION
+  - path: '*__local_seeding_mask.nii.gz'
+    type: FILE
+    resource: TISSUES_SEGMENTATION
+  - path: '*__local_tracking_mask.nii.gz'
+    type: FILE
+    resource: TISSUES_SEGMENTATION
+  - path: '*__pft_seeding_mask.nii.gz'
+    type: FILE
+    resource: TISSUES_SEGMENTATION
+  - path: '*__interface.nii.gz'
+    type: FILE
+    resource: TISSUES_SEGMENTATION
+  - path: '*__map_exclude.nii.gz'
+    type: FILE
+    resource: TISSUES_SEGMENTATION
+  - path: '*__map_include.nii.gz'
+    type: FILE
+    resource: TISSUES_SEGMENTATION
+  - path: '*__ad.nii.gz'
+    type: FILE
+    resource: DTI_METRICS
+  - path: '*__rd.nii.gz'
+    type: FILE
+    resource: DTI_METRICS
+  - path: '*__md.nii.gz'
+    type: FILE
+    resource: DTI_METRICS
+  - path: '*__fa.nii.gz'
+    type: FILE
+    resource: DTI_METRICS
+  - path: '*__rgb.nii.gz'
+    type: FILE
+    resource: DTI_METRICS
+  - path: '*__tensor.nii.gz'
+    type: FILE
+    resource: DTI_METRICS
+  - path: '*__evecs_v1.nii.gz'
+    type: FILE
+    resource: DTI_METRICS
+  - path: '*__evals_e1.nii.gz'
+    type: FILE
+    resource: DTI_METRICS
+  - path: '*__afd_max.nii.gz'
+    type: FILE
+    resource: FODF_METRICS
+  - path: '*__afd_sum.nii.gz'
+    type: FILE
+    resource: FODF_METRICS
+  - path: '*__afd_total.nii.gz'
+    type: FILE
+    resource: FODF_METRICS
+  - path: '*__nufo.nii.gz'
+    type: FILE
+    resource: FODF_METRICS
+  - path: '*__peaks.nii.gz'
+    type: FILE
+    resource: FODF_METRICS
+  - path: '*__fodf.nii.gz'
+    type: FILE
+    resource: FODF_METRICS
+  - path: '*__ensemble.trk'
+    type: FILE
+    resource: DWI_TRK
+
+command: >-
+  singularity run
+  --home $JOBDIR
+  --containall
+  --cleanenv
+  --bind $INDIR:/INPUTS
+  --bind  $OUTDIR:/OUTPUTS
+  --bind $JOBDIR:/TMP
+  {container_path}
+  {subject}
+  {session}
+  {t1_file}
+  {dti_nifti}
+  {dti_bval}
+  {dti_bvec}
+  {sh_order}
+  {dti_shells}
+  {fodf_shells}
+  {pft_seed}
+  {pft_mask_type}
+  {local_seed}
+  {local_mask_type}
+  {algo}
+attrs:
+  xsitype: proc:genProcData
+  walltime: "72:00:00"
+  memory: 16384
+  ppn: 1
+
+jobtemplate: job_template.txt

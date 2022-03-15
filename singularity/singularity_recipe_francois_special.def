@@ -1,0 +1,150 @@
+BootStrap: docker
+From: ubuntu:bionic
+
+%environment
+    export MATPLOTLIBRC="/usr/local/lib/python3.8/dist-packages/matplotlib/mpl-data/"
+    export ANTSPATH=/opt/ANTs/bin/
+    export PATH=$PATH:$ANTSPATH
+    export ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS=1
+    export OPENBLAS_NUM_THREADS=1
+    export OMP_NUM_THREADS=1
+    export FSLDIR=/usr/share/fsl
+    export PATH=${FSLDIR}/bin:$PATH
+    export LD_LIBRARY_PATH=/usr/share/fsl:/usr/share/fsl/bin
+    export FSLBROWSER=/etc/alternatives/x-www-browser
+    export FSLCLUSTER_MAILOPTS=n
+    export FSLMULTIFILEQUIT=TRUE
+    export FSLOUTPUTTYPE=NIFTI_GZ
+    export FSLTCLSH=/usr/bin/tclsh
+    export FSLWISH=/usr/bin/wish
+    export POSSUMDIR=/usr/share/fsl
+    export PATH=/mrtrix3/bin:$PATH
+
+%setup
+    mkdir $SINGULARITY_ROOTFS/pybin $SINGULARITY_ROOTFS/human-data/ $SINGULARITY_ROOTFS/CODE/
+    cp ../code/* $SINGULARITY_ROOTFS/CODE/
+    tar -xf human-data_master_1d3abfb.tar.gz -C $SINGULARITY_ROOTFS/human-data/
+    tar -xf rbx_pop_average.tar -C $SINGULARITY_ROOTFS/
+    cp mni_icbm152_nlin_asym_09c_t1_masked_2mm.nii.gz $SINGULARITY_ROOTFS/
+    cp mni_icbm152_nlin_asym_09c_t1_masked.nii.gz $SINGULARITY_ROOTFS/
+
+    git clone https://github.com/frheault/tractoflow.git $SINGULARITY_ROOTFS/tractoflow/
+    cd $SINGULARITY_ROOTFS/tractoflow/
+    git checkout f2f4258
+
+    cd $SINGULARITY_ROOTFS/
+    git clone https://github.com/frheault/rbx-flow.git $SINGULARITY_ROOTFS/rbx_flow/
+    cd $SINGULARITY_ROOTFS/rbx_flow/
+    git checkout e133ced
+
+    cd $SINGULARITY_ROOTFS/
+    git clone https://github.com/frheault/tractometry-flow.git $SINGULARITY_ROOTFS/tractometry_flow/
+    cd $SINGULARITY_ROOTFS/tractometry_flow/
+    git checkout 76427e9
+
+    cd $SINGULARITY_ROOTFS/
+    git clone https://github.com/frheault/connectoflow.git $SINGULARITY_ROOTFS/connectoflow/
+    cd $SINGULARITY_ROOTFS/connectoflow/
+    git checkout 2f4356f
+
+    sed -i 's/scratch = true/scratch = false/g' $SINGULARITY_ROOTFS/tractoflow/nextflow.config
+    sed -i 's/scratch = true/scratch = false/g' $SINGULARITY_ROOTFS/rbx_flow/nextflow.config 
+    sed -i 's/scratch = true/scratch = false/g' $SINGULARITY_ROOTFS/tractometry_flow/nextflow.config
+    sed -i 's/scratch = true/scratch = false/g' $SINGULARITY_ROOTFS/connectoflow/nextflow.config
+
+%post
+    apt update
+    DEBIAN_FRONTEND=noninteractive apt -y install keyboard-configuration
+    
+    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/cache/apt/*.bin
+    apt update
+    apt -y install software-properties-common
+    add-apt-repository ppa:deadsnakes/ppa
+    apt update
+
+    apt -y install python3.8 python3.8-dev python3.8-tk python3.8-distutils
+    apt -y install openjdk-8-jdk
+    apt -y install wget unzip parallel git dc
+    apt -y install libblas3 liblapack3 liblapack-dev libblas-dev gfortran
+    apt -y install libxt-dev libgomp1 binutils perl psmisc unzip uuid-dev vim-common libjpeg62-dev libfreetype6-dev libpng-dev
+    apt -y install build-essential zlib1g-dev g++ gcc clang
+    apt -y purge nvidia*
+	apt -y install xserver-xorg xserver-xorg-video-intel libgl1-mesa-glx libglu1-mesa libgl1-mesa-dev libgl1-mesa-dri xserver-xorg-core   
+	dpkg-reconfigure xserver-xorg   
+	apt -y install xvfb imagemagick poppler-utils pkg-config
+
+    git config --global url."https://".insteadOf git://
+    wget https://bootstrap.pypa.io/get-pip.py
+    python3.8 get-pip.py
+    pip install fpdf imageio freetype-py pypng numpy==1.22.* --no-binary numpy
+    pip install -e git://github.com/frheault/scilpy.git@487c8a0#egg=scilpy
+    sed -i '41s/.*/backend : Agg/' /usr/local/lib/python3.8/dist-packages/matplotlib/mpl-data/matplotlibrc
+
+    wget https://github.com/nextflow-io/nextflow/releases/download/v19.04.0/nextflow-19.04.0-all
+    mv nextflow-19.04.0-all nextflow
+    chmod +x nextflow
+
+    cd $SINGULARITY_ROOTFS/
+    wget https://github.com/Kitware/CMake/releases/download/v3.13.2/cmake-3.13.2.tar.gz
+    tar -xvzf cmake-3.13.2.tar.gz
+    rm -rf cmake-3.13.2.tar.gz
+    cd /cmake-3.13.2
+    ./bootstrap
+    make -j 8
+    make install
+
+    apt -y install libeigen3-dev libqt5opengl5-dev libqt5svg5-dev libfftw3-dev libtiff5-dev qt5-default
+    cd $SINGULARITY_ROOTFS/
+    apt -y install unzip qt5-default && \
+        git clone https://github.com/MRtrix3/mrtrix3.git
+    cd /mrtrix3
+    git fetch --tags && \
+        git checkout tags/3.0_RC3 -b 3.0_RC3 && \
+        ./configure && \
+        NUMBER_OF_PROCESSORS=8 ./build
+
+    cd $SINGULARITY_ROOTFS/
+    mkdir ants_build && \
+        git clone https://github.com/ANTsX/ANTs.git
+    cd /ANTs
+    git fetch --tags && \
+        git checkout tags/v2.3.4 -b v2.3.4
+    cd /ants_build
+    cmake \
+        -DBUILD_SHARED_LIBS=OFF \
+        -DUSE_VTK=OFF \
+        -DSuperBuild_ANTS_USE_GIT_PROTOCOL=OFF \
+        -DBUILD_TESTING=OFF \
+        -DRUN_LONG_TESTS=OFF \
+        -DRUN_SHORT_TESTS=OFF ../ANTs && \
+        make -j 2
+    cd /ants_build/ANTS-build
+    make install
+
+    mkdir -p /tmp/fsl_sources
+    cd /tmp/fsl_sources
+    wget https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py && \
+        python fslinstaller.py -d /usr/share/fsl && \
+        rm -rf /usr/share/fsl/src\
+               /usr/share/fsl/data\
+               /usr/share/fsl/build\
+               /usr/share/fsl/include\
+               /usr/share/fsl/build.log\
+               /usr/share/fsl/tcl\
+               /usr/share/fsl/LICENSE\
+               /usr/share/fsl/src\
+               /usr/share/fsl/README\
+               /usr/share/fsl/refdoc\
+               /usr/share/fsl/python\
+               /usr/share/fsl/doc\
+               /usr/share/fsl/config\
+               /usr/share/fsl/fslpython
+
+    # Make custom folders
+    mkdir -p /INPUTS && chmod 755 /INPUTS 
+    mkdir -p /OUTPUTS && chmod 775 /OUTPUTS
+    mkdir -p /TMP && chmod 775 /TMP
+
+%runscript
+    xvfb-run -a --server-num=$((65536+$$)) --server-args="-screen 0 1600x1280x24 -ac" bash /CODE/launch_francois_special.sh /INPUTS /OUTPUTS "$@" /TMP

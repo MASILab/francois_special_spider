@@ -1,0 +1,97 @@
+BootStrap: docker
+From: ubuntu:bionic
+
+%environment
+    export MATPLOTLIBRC="/usr/local/lib/python3.8/dist-packages/matplotlib/mpl-data/"
+    export ANTSPATH=/opt/ANTs/bin/
+    export PATH=$PATH:$ANTSPATH
+    export ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS=1
+    export OPENBLAS_NUM_THREADS=1
+    export OMP_NUM_THREADS=1
+
+%setup
+    mkdir $SINGULARITY_ROOTFS/pybin $SINGULARITY_ROOTFS/CODE/
+    cp ../code/* $SINGULARITY_ROOTFS/CODE/
+    cp mni_icbm152_nlin_asym_09c_t1_masked.nii.gz $SINGULARITY_ROOTFS/
+
+    git clone https://github.com/scilus/connectoflow.git $SINGULARITY_ROOTFS/connectoflow/
+    cd $SINGULARITY_ROOTFS/connectoflow/
+    sed -i 's/scratch = true/scratch = false/g' $SINGULARITY_ROOTFS/connectoflow/nextflow.config
+    sed -i 's/python3/python3.8/g' $SINGULARITY_ROOTFS/connectoflow/main.nf
+    
+%post
+    apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get -y install keyboard-configuration
+    
+    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/cache/apt/*.bin
+    apt update
+    apt -y install software-properties-common
+    add-apt-repository ppa:deadsnakes/ppa
+    apt update
+
+    apt -y install python3.8
+    apt -y install python3.8-dev
+    apt -y install python3.8-tk
+    apt -y install python3.8-distutils
+
+    apt-get -y install openjdk-8-jdk parallel unzip git wget
+    apt-get -y install libblas3 liblapack3
+    apt-get -y install liblapack-dev libblas-dev gfortran
+    apt-get -y install libxt-dev libgomp1 binutils perl psmisc uuid-dev vim-common libjpeg62-dev libfreetype6-dev libpng-dev
+    apt-get -y purge nvidia*
+    apt-get -y install xserver-xorg-video-intel libgl1-mesa-glx libglu1-mesa libgl1-mesa-dev libgl1-mesa-dri xserver-xorg-core   
+    #dpkg-reconfigure xserver-xorg
+    apt-get -y install xvfb imagemagick
+
+    wget https://bootstrap.pypa.io/get-pip.py
+    python3.8 get-pip.py
+
+    apt-get -y install pkg-config
+    pip install fpdf
+    pip install freetype-py pypng
+    pip install numpy==1.20.* --no-binary numpy
+    pip install -e git://github.com/scilus/scilpy.git@45d4123#egg=scilpy
+    sed -i '41s/.*/backend : Agg/' /usr/local/lib/python3.8/dist-packages/matplotlib/mpl-data/matplotlibrc
+
+    wget https://github.com/nextflow-io/nextflow/releases/download/v19.04.0/nextflow-19.04.0-all
+    mv nextflow-19.04.0-all nextflow
+    chmod +x nextflow
+
+    apt -y install build-essential zlib1g-dev g++ gcc clang
+
+    cd /
+    wget https://github.com/Kitware/CMake/releases/download/v3.13.2/cmake-3.13.2.tar.gz
+    tar -xvzf cmake-3.13.2.tar.gz
+    rm -rf cmake-3.13.2.tar.gz
+    cd /cmake-3.13.2
+    ./bootstrap
+    make -j 8
+    make install
+    cd /
+
+    cd /
+    mkdir ants_build &&\
+        git clone https://github.com/ANTsX/ANTs.git
+    cd /ANTs
+    git fetch --tags &&\
+        git checkout tags/v2.3.4 -b v2.3.4
+    cd /ants_build
+    cmake \
+        -DBUILD_SHARED_LIBS=OFF \
+        -DUSE_VTK=OFF \
+        -DSuperBuild_ANTS_USE_GIT_PROTOCOL=OFF \
+        -DBUILD_TESTING=OFF \
+        -DRUN_LONG_TESTS=OFF \
+        -DRUN_SHORT_TESTS=OFF ../ANTs &&\
+        make -j 2
+    cd /ants_build/ANTS-build
+    make install
+
+    # Make custom folders
+    mkdir -p /INPUTS && chmod 755 /INPUTS 
+    mkdir -p /OUTPUTS && chmod 775 /OUTPUTS
+    mkdir -p /TMP && chmod 775 /TMP
+	
+%runscript
+    xvfb-run -a --server-num=$((65536+$$)) --server-args="-screen 0 1600x1280x24 -ac" bash /CODE/launch_connectoflow_wrapper.sh /INPUTS /OUTPUTS "$@"

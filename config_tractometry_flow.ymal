@@ -1,0 +1,129 @@
+---
+moreauto: true
+procversion: 1.0.0
+procname: tractometry_flow
+
+inputs:
+  default:
+    container_path: tractometry_flow_v1.0.0.simg
+    nb_pts: 20
+  xnat:
+    assessors:
+      - name: assr_rbx_flow
+        proctypes: rbx_flow_v1
+        needs_qc: False
+        resources:
+          - resource: BUNDLE_TRK
+            fcount: 1
+            ftype: DIRJ
+            fdest: bundles_dir
+            varname: bundles_dir
+          - resource: CENTROID_TRK
+            fcount: 1
+            ftype: DIRJ
+            fdest: centroids_dir
+            varname: centroids_dir
+      - name: assr_tractoflow
+        proctypes: tractoflow_v1
+        needs_qc: False
+        resources:
+          - resource: DTI_METRICS
+            fmatch: '*__fa.nii.gz'
+            fcount: 1
+            fdest: metrics_fa.nii.gz
+            ftype: FILE
+            varname: fa_file
+          - resource: DTI_METRICS
+            fmatch: '*__md.nii.gz'
+            fcount: 1
+            fdest: metrics_md.nii.gz
+            ftype: FILE
+            varname: md_file
+          - resource: DTI_METRICS
+            fmatch: '*__ad.nii.gz'
+            fcount: 1
+            fdest: metrics_ad.nii.gz
+            ftype: FILE
+            varname: ad_file
+          - resource: DTI_METRICS
+            fmatch: '*__rd.nii.gz'
+            fcount: 1
+            fdest: metrics_rd.nii.gz
+            ftype: FILE
+            varname: rd_file
+          - resource: FODF_METRICS
+            fmatch: '*__nufo.nii.gz'
+            fcount: 1
+            fdest: metrics_nufo.nii.gz
+            ftype: FILE
+            varname: nufo_file
+          - resource: FODF_METRICS
+            fmatch: '*__afd_max.nii.gz'
+            fcount: 1
+            fdest: metrics_afd_max.nii.gz
+            ftype: FILE
+            varname: afd_max
+          - resource: FODF_METRICS
+            fmatch: '*__afd_sum.nii.gz'
+            fcount: 1
+            fdest: metrics_afd_sum.nii.gz
+            ftype: FILE
+            varname: afd_sum
+          - resource: FODF_METRICS
+            fmatch: '*__afd_total.nii.gz'
+            fcount: 1
+            fdest: metrics_afd_total.nii.gz
+            ftype: FILE
+            varname: afd_total
+    attrs:
+      - varname: project
+        object: session
+        attr: project
+      - varname: subject
+        object: session
+        attr: subject_label
+      - varname: session
+        object: session
+        attr: label
+outputs:
+  - path: 'report.pdf'
+    type: FILE
+    resource: PDF
+  - path: 'report.html'
+    type: FILE
+    resource: REPORT
+  - path: 'stats_xlsx/'
+    type: DIR
+    resource: STATS
+  - path: 'stats_json/'
+    type: DIR
+    resource: STATS
+  - path: 'labels_maps/'
+    type: DIR
+    resource: LABELS
+  - path: 'bundle_endpoints_metrics/'
+    type: DIR
+    resource: ENDPOINTS_METRICS
+
+command: >-
+  singularity run
+  --home $JOBDIR
+  --bind $JOBDIR:/tmp
+  --containall
+  --cleanenv
+  --bind $INDIR:/INPUTS
+  --bind  $OUTDIR:/OUTPUTS
+  --bind $JOBDIR:/TMP
+  {container_path}
+  {subject}
+  {session}
+  {bundles_dir}
+  {centroids_dir}
+  {nb_pts}
+attrs:
+  xsitype: proc:genProcData
+  walltime: "03:00:00"
+  memory: 4096
+  ppn: 1
+
+jobtemplate: job_template.txt
