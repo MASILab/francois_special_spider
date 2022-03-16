@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd "${20}"
+cd "${22}"
 
 # TRACTOFLOW
 mkdir output_tf/
@@ -9,11 +9,11 @@ bash /CODE/launch_tractoflow_wrapper.sh "${1}" $(readlink -e output_tf/) "${3}" 
 
 # RBX_FLOW
 mkdir input_rbxf/ output_rbxf/
-cp output_tf/*__fa.nii.gz input_rbxf/fa.nii.gz 
+cp output_tf/*__fa.nii.gz input_rbxf/fa.nii.gz
 cp output_tf/*__ensemble.trk input_rbxf/tracking.trk
 
 bash /CODE/launch_rbx_flow_wrapper.sh input_rbxf/ output_rbxf/ "${3}" "${4}" fa.nii.gz \
-	tracking.trk 27 0.4
+	tracking.trk "${17}" "${18}"
 
 # TRACTOMETRY_FLOW
 mkdir input_tmf/ output_tmf/
@@ -28,7 +28,7 @@ cp output_tf/*__nufo.nii.gz input_tmf/metrics_nufo.nii.gz
 cp output_rbxf/bundles output_rbxf/centroids input_tmf/ -r
 
 bash /CODE/launch_tractometry_flow_wrapper.sh input_tmf/ output_tmf/ "${3}" "${4}" \
-	bundles centroids "${17}"
+	bundles centroids "${19}"
 
 # CONNECTOFLOW
 mkdir input_cf/ output_cf/
@@ -49,8 +49,8 @@ cp output_tf/*__output0GenericAffine.mat input_cf/output0GenericAffine.mat
 cp output_tf/*__output1Warp.nii.gz input_cf/output1Warp.nii.gz
 cp output_tf/*__ensemble.trk input_cf/tracking.trk
 cp "${1}"/"${5}" input_cf/t1.nii.gz
-cp "${1}"/"${18}" input_cf/labels.nii.gz
-IN_LABELS_TO_REMOVE="${19}"
+cp "${1}"/"${20}" input_cf/labels.nii.gz
+IN_LABELS_TO_REMOVE="${21}"
 
 bash /CODE/launch_connectoflow_wrapper.sh input_cf/ output_cf/ "${3}" "${4}" \
 	dwi_resampled.nii.gz dwi.bval dwi.bvec peaks.nii.gz fodf.nii.gz \
