@@ -30,7 +30,7 @@ From: ubuntu:bionic
 
     git clone https://github.com/frheault/tractoflow.git $SINGULARITY_ROOTFS/tractoflow/
     cd $SINGULARITY_ROOTFS/tractoflow/
-    git checkout f2f4258
+    git checkout f4a1f62
 
     cd $SINGULARITY_ROOTFS/
     git clone https://github.com/frheault/rbx-flow.git $SINGULARITY_ROOTFS/rbx_flow/
