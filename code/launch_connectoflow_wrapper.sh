@@ -37,7 +37,7 @@ scil_dilate_labels.py raw_3/${N_SUBJ}_${N_SESS}/labels.nii.gz raw_3/${N_SUBJ}_${
 python3.8 /CODE/get_labels_list.py raw_3/${N_SUBJ}_${N_SESS}/labels.nii.gz labels_list.txt
 
 # Launch pipeline
-nextflow /connectoflow/main.nf --input raw_3/ --template /mni_icbm152_nlin_asym_09c_t1_masked.nii.gz \
+/nextflow /connectoflow/main.nf --input raw_3/ --template /mni_icbm152_nlin_asym_09c_t1_masked.nii.gz \
 	--labels_list labels_list.txt --use_similarity_metric false --use_commit2 --ball_stick --iso_diff "2.0E-3" \
 	--processes_register 1 --processes_commit 1 --processes_afd_rd 1 --processes_connectivity 1 --processes 1 \
 	-resume -with-report report.html
