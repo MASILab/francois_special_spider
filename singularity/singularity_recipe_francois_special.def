@@ -65,7 +65,7 @@ From: ubuntu:bionic
 
     apt -y install python3.8 python3.8-dev python3.8-tk python3.8-distutils
     apt -y install openjdk-8-jdk
-    apt -y install wget unzip parallel git dc
+    apt -y install wget unzip parallel git dc bc
     apt -y install libblas3 liblapack3 liblapack-dev libblas-dev gfortran
     apt -y install libxt-dev libgomp1 binutils perl psmisc unzip uuid-dev vim-common libjpeg62-dev libfreetype6-dev libpng-dev
     apt -y install build-essential zlib1g-dev g++ gcc clang

@@ -66,8 +66,8 @@ cp results/*/readme.txt ${OUT_DIR}/
 cp report.pdf ${OUT_DIR}/report_tf.pdf
 cp report.html ${OUT_DIR}/report_tf.html
 cp -L results/*/*/*__b0_resampled.nii.gz results/*/*/*__b0_mask_resampled.nii.gz results/*/*/*__dwi_resampled.nii.gz ${OUT_DIR}/
-cp -L results/*/*/*__bval_eddy ${OUT_DIR}/${N_SUBJ}_${N_SESS}__dwi.bval
-cp -L results/*/*/*__dwi_eddy_corrected.bvec ${OUT_DIR}/${N_SUBJ}_${N_SESS}__dwi.bvec
+cp -L raw_0/${N_SUBJ}_${N_SESS}/bval ${OUT_DIR}/${N_SUBJ}_${N_SESS}__dwi.bval
+cp -L raw_0/${N_SUBJ}_${N_SESS}/bvec ${OUT_DIR}/${N_SUBJ}_${N_SESS}__dwi.bvec
 cp -L results/*/*/*__output0GenericAffine.mat results/*/*/*__output1InverseWarp.nii.gz results/*/*/*__output1Warp.nii.gz ${OUT_DIR}/
 cp -L results/*/*/*__t1_mask_warped.nii.gz results/*/*/*__t1_warped.nii.gz ${OUT_DIR}/
 cp -L results/*/*/*__map_csf.nii.gz results/*/*/*__map_gm.nii.gz results/*/*/*__map_wm.nii.gz ${OUT_DIR}/

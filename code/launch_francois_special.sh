@@ -6,6 +6,7 @@ cd "${22}"
 mkdir output_tf/
 bash /CODE/launch_tractoflow_wrapper.sh "${1}" $(readlink -e output_tf/) "${3}" "${4}" "${5}" "${6}" \
 	 "${7}" "${8}" "${9}" "${10}" "${11}" "${12}" "${13}" "${14}" "${15}" "${16}"
+rm work/* -rf
 
 # RBX_FLOW
 mkdir input_rbxf/ output_rbxf/
@@ -14,6 +15,7 @@ cp output_tf/*__ensemble.trk input_rbxf/tracking.trk
 
 bash /CODE/launch_rbx_flow_wrapper.sh input_rbxf/ output_rbxf/ "${3}" "${4}" fa.nii.gz \
 	tracking.trk "${17}" "${18}"
+rm work/* -rf
 
 # TRACTOMETRY_FLOW
 mkdir input_tmf/ output_tmf/
@@ -29,6 +31,7 @@ cp output_rbxf/bundles output_rbxf/centroids input_tmf/ -r
 
 bash /CODE/launch_tractometry_flow_wrapper.sh input_tmf/ output_tmf/ "${3}" "${4}" \
 	bundles centroids "${19}"
+rm work/* -rf
 
 # CONNECTOFLOW
 mkdir input_cf/ output_cf/
@@ -56,6 +59,7 @@ bash /CODE/launch_connectoflow_wrapper.sh input_cf/ output_cf/ "${3}" "${4}" \
 	dwi_resampled.nii.gz dwi.bval dwi.bvec peaks.nii.gz fodf.nii.gz \
 	output0GenericAffine.mat output1Warp.nii.gz tracking.trk \
 	t1.nii.gz labels.nii.gz "${19}"
+rm work/* -rf
 
 cp output*/* "${2}"/ -rL
 pdfunite output_tf/*.pdf output_rbxf/*.pdf output_tmf/*.pdf output_cf/*.pdf "${2}"/report.pdf
