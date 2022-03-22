@@ -263,7 +263,7 @@ def main():
         cmap = plt.get_cmap('jet')
         for points in streamlines_vox:
             values = map_coordinates(normalized_data, points.T,
-                                     order=1, mode='linear')
+                                     order=0, mode='nearest')
             colors.append(cmap(values)[:, 0:3])
     else:
         colors = None
