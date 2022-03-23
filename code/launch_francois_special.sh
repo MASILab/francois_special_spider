@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd "${22}"
+cd /TMP/
 
 # TRACTOFLOW
 mkdir output_tf/
@@ -53,12 +53,11 @@ cp output_tf/*__output1Warp.nii.gz input_cf/output1Warp.nii.gz
 cp output_tf/*__ensemble.trk input_cf/tracking.trk
 cp "${1}"/"${5}" input_cf/t1.nii.gz
 cp "${1}"/"${20}" input_cf/labels.nii.gz
-IN_LABELS_TO_REMOVE="${21}"
 
 bash /CODE/launch_connectoflow_wrapper.sh input_cf/ output_cf/ "${3}" "${4}" \
 	dwi_resampled.nii.gz dwi.bval dwi.bvec peaks.nii.gz fodf.nii.gz \
 	output0GenericAffine.mat output1Warp.nii.gz tracking.trk \
-	t1.nii.gz labels.nii.gz "${19}"
+	t1.nii.gz labels.nii.gz "${21}"
 rm work/* -rf
 
 cp output*/* "${2}"/ -rL
