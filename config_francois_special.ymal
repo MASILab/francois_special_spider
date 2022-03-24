@@ -234,13 +234,13 @@ outputs:
   - path: '*__t1_mni.nii.gz'
     type: FILE
     resource: REG_IMAGES
-  - path: '*__output0GenericAffine.mat'
+  - path: '*__to_mni0GenericAffine.mat'
     type: FILE
     resource: REG_TRANSFORMS
-  - path: '*__output1InverseWarp.nii.gz'
+  - path: '*__to_mni1InverseWarp.nii.gz'
     type: FILE
     resource: REG_TRANSFORMS
-  - path: '*__output1Warp.nii.gz'
+  - path: '*__to_mni1Warp.nii.gz'
     type: FILE
     resource: REG_TRANSFORMS
   - path: '*__decompose_warped_mni.h5'
