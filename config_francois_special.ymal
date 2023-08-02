@@ -17,7 +17,7 @@ inputs:
     nb_run: 27
     vote_ratio: 0.4
     nb_pts: 20
-    labels_to_remove: \"4 40 41 44 45 51 52\"
+    labels_to_remove: \"4 40 41 44 45 51 52 11 49 50\"
   xnat:
     scans:
       - name: scan_t1
